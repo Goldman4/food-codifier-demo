@@ -25,7 +25,7 @@ import {
   useSendToReview,
   useResetRecord,
 } from "@workspace/api-client-react";
-import { RationRecord } from "@workspace/api-client-react/src/generated/api.schemas";
+import type { RationRecord } from "@workspace/api-client-react";
 import { formatDateTime, getStatusInfo } from "@/lib/formatters";
 import { useDebounce } from "@/hooks/use-debounce";
 
