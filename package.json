@@ -1,0 +1,25 @@
+{
+  "name": "food-codifier-demo",
+  "version": "1.0.0",
+  "private": true,
+  "license": "MIT",
+  "packageManager": "pnpm@10.15.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "pnpm --parallel --filter @workspace/api-server --filter @workspace/food-codifier run dev",
+    "dev:api": "pnpm --filter @workspace/api-server run dev",
+    "dev:web": "pnpm --filter @workspace/food-codifier run dev",
+    "build": "pnpm run typecheck && pnpm -r --if-present run build",
+    "typecheck:libs": "tsc --build",
+    "typecheck": "pnpm run typecheck:libs && pnpm -r --filter ./artifacts/** --if-present run typecheck",
+    "validate:data": "node scripts/validate-data.mjs",
+    "test:matcher": "pnpm --filter @workspace/api-server exec tsx ../../scripts/matcher-smoke.ts",
+    "test": "pnpm run validate:data && pnpm run test:matcher"
+  },
+  "devDependencies": {
+    "prettier": "^3.9.4",
+    "typescript": "~5.9.3"
+  }
+}
