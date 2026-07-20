@@ -1,5 +1,5 @@
 import { format, parseISO } from "date-fns";
-import { RationRecord, RationRecordStatus } from "@workspace/api-client-react/src/generated/api.schemas";
+import type { RationRecord } from "@workspace/api-client-react";
 
 export function formatDateTime(dateStr: string, timeStr: string) {
   try {
