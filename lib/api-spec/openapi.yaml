@@ -1,0 +1,318 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: Codifier API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: ration
+    description: Ration records
+  - name: codifier
+    description: Codifier operations
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /ration:
+    get:
+      operationId: listRationRecords
+      tags: [ration]
+      summary: List all ration records with codification status
+      responses:
+        "200":
+          description: List of ration records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RationRecord"
+
+  /ration/stats:
+    get:
+      operationId: getRationStats
+      tags: [ration]
+      summary: Get codification statistics
+      responses:
+        "200":
+          description: Statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RationStats"
+
+  /ration/codify-all:
+    post:
+      operationId: codifyAllRecords
+      tags: [ration]
+      summary: Run codification on all unprocessed records
+      responses:
+        "200":
+          description: Updated records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RationRecord"
+
+  /ration/{recordId}/codify:
+    post:
+      operationId: codifyRecord
+      tags: [ration]
+      summary: Codify a single ration record
+      parameters:
+        - name: recordId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Updated record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RationRecord"
+
+  /ration/{recordId}/confirm:
+    post:
+      operationId: confirmRecord
+      tags: [ration]
+      summary: Confirm or override the suggested code
+      parameters:
+        - name: recordId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConfirmInput"
+      responses:
+        "200":
+          description: Updated record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RationRecord"
+
+  /ration/{recordId}/review:
+    post:
+      operationId: sendToReview
+      tags: [ration]
+      summary: Send a record for manual review
+      parameters:
+        - name: recordId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Updated record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RationRecord"
+
+  /ration/{recordId}/reset:
+    post:
+      operationId: resetRecord
+      tags: [ration]
+      summary: Reset a record's codification decision
+      parameters:
+        - name: recordId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Updated record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RationRecord"
+
+  /codifier/info:
+    get:
+      operationId: getCodifierInfo
+      tags: [codifier]
+      summary: Get codifier metadata (total entries count)
+      responses:
+        "200":
+          description: Codifier info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CodifierInfo"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    RationRecord:
+      type: object
+      required:
+        - record_id
+        - date
+        - meal_time
+        - place_label
+        - food_description
+        - preparation_label
+        - quantity
+        - unit
+        - status
+      properties:
+        record_id:
+          type: string
+        date:
+          type: string
+        meal_time:
+          type: string
+        place_code:
+          type: ["integer", "null"]
+        place_label:
+          type: string
+        food_description:
+          type: string
+        preparation_code:
+          type: ["integer", "null"]
+        preparation_label:
+          type: string
+        quantity:
+          type: number
+        unit:
+          type: string
+        status:
+          type: string
+          enum: [pending, codified, needs_review, confirmed, sent_to_review]
+        codification:
+          $ref: "#/components/schemas/CodificationResult"
+
+    CodificationResult:
+      type: object
+      required:
+        - suggested_code
+        - suggested_name
+        - section
+        - subgroup
+        - confidence
+        - confidence_label
+        - explanation
+        - candidates
+        - final_code
+        - decision_source
+      properties:
+        suggested_code:
+          type: string
+        suggested_name:
+          type: string
+        section:
+          type: string
+        subgroup:
+          type: string
+        confidence:
+          type: number
+        confidence_label:
+          type: string
+        explanation:
+          type: string
+        candidates:
+          type: array
+          items:
+            $ref: "#/components/schemas/Candidate"
+        final_code:
+          type: ["string", "null"]
+        final_name:
+          type: ["string", "null"]
+        decision_source:
+          type: string
+          enum: [system, specialist]
+
+    Candidate:
+      type: object
+      required:
+        - code
+        - name
+        - section
+        - subgroup
+        - score
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+        section:
+          type: string
+        subgroup:
+          type: string
+        score:
+          type: number
+
+    RationStats:
+      type: object
+      required:
+        - total
+        - processed
+        - confirmed
+        - needs_review
+        - pending
+        - codifier_count
+      properties:
+        total:
+          type: integer
+        processed:
+          type: integer
+        confirmed:
+          type: integer
+        needs_review:
+          type: integer
+        pending:
+          type: integer
+        codifier_count:
+          type: integer
+
+    ConfirmInput:
+      type: object
+      required:
+        - code
+        - name
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+
+    CodifierInfo:
+      type: object
+      required:
+        - count
+      properties:
+        count:
+          type: integer
